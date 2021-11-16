@@ -1,0 +1,70 @@
+###  1. launch a single node cluster
+launch a single node with minikube
+
+check the version
+```
+$ minikube version
+minikube version: v1.8.1
+commit: cbda04cf6bbe65e987ae52bb393c10099ab62014
+```
+start command
+```
+$ minikube start --wait=false
+* minikube v1.8.1 on Ubuntu 18.04
+* Using the none driver based on user configuration
+* Running on localhost (CPUs=2, Memory=2460MB, Disk=145651MB) ...
+* OS release is Ubuntu 18.04.4 LTS
+* Preparing Kubernetes v1.17.3 on Docker 19.03.6 ...
+  - kubelet.resolv-conf=/run/systemd/resolve/resolv.conf
+* Launching Kubernetes ... 
+* Enabling addons: default-storageclass, storage-provisioner
+* Configuring local host environment ...
+* Done! kubectl is now configured to use "minikube"
+```
+cluster status and node info
+```
+$ kubectl cluster-info
+Kubernetes master is running at https://172.17.0.22:8443
+KubeDNS is running at https://172.17.0.22:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+$ kubectl get nodes
+NAME       STATUS   ROLES    AGE   VERSION
+minikube   Ready    master   11m   v1.17.3
+```
+deploy a container
+```
+ kubectl create deployment first-deployment --image=katacoda/docker-http-server
+deployment.apps/first-deployment created
+$ kubectl create deployment first-deployment --image=katacoda/docker-http-server
+Error from server (AlreadyExists): deployments.apps "first-deployment" already exists
+$ kubectl get nodes
+NAME       STATUS   ROLES    AGE   VERSION
+minikube   Ready    master   14m   v1.17.3
+$ kubectl create deployment first-deployment2 --image=katacoda/docker-http-server
+deployment.apps/first-deployment2 created
+$ kubectl get pods
+NAME                                 READY   STATUS    RESTARTS   AGE
+first-deployment-666c48b44-cx9jn     1/1     Running   0          61s
+first-deployment2-7d9df86fdb-cg6s4   1/1     Running   0          23s
+```
+use nodeport to expose the netport
+```
+kubectl expose deployment first-deployment --port=80 --type=NodePort
+```
+send the http request
+```
+export PORT=$(kubectl get svc first-deployment -o go-template='{{range.spec.ports}}{{if .nodePort}}{{.nodePort}}{{"\n"}}{{end}}{{end}}')
+echo "Accessing host01:$PORT"
+curl host01:$PORT
+```
+lanuch the dashboard
+```
+minikube addons enable dashboard
+kubectl apply -f /opt/kubernetes-dashboard.yaml
+
+```
+
+
+
+
